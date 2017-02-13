@@ -38,6 +38,10 @@ var init = function(msgCallback) {
                 }
             }
 
+            if (config.ircIgnoredUsers.indexOf(user) !== -1) {
+                return;
+            }
+
             logger.debug('got irc msg:', message);
             msgCallback({
                 protocol: 'irc',
