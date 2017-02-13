@@ -159,3 +159,6 @@ config.hlRegexp = new RegExp(regex, 'i');
 // with the default regexp this would hide the bot nickname in messages when
 // highlighted
 config.hlOnlyShowMatch = false;
+
+// Messages sent by these nicks on IRC will be ignored.
+config.ircIgnoredUsers = [];
