@@ -104,7 +104,10 @@ exports.serveFile = function(fileId, config, tg, callback) {
     mkdirp(path.join(filesPath, randomString));
     tg.downloadFile(fileId, path.join(filesPath, randomString))
     .then(function(filePath) {
-        callback(config.httpLocation + '/' + randomString + '/' + path.basename(filePath));
+        callback(
+            config.httpLocation + '/' + randomString + '/' + path.basename(filePath) +
+            (/\.webp$/.test(filePath) ? '.png' : '' )
+        );
     });
 };
 
