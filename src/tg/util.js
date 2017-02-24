@@ -236,7 +236,7 @@ exports.parseMsg = function(msg, myUser, tg, callback) {
 
     var prefix = '';
     if (!config.soloUse) {
-        prefix = '<' + exports.getName(msg.from, config) + '> ';
+        prefix = '[' + exports.getName(msg.from, config) + '] ';
     }
 
     if (msg.text && !msg.text.indexOf('/names')) {

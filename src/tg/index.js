@@ -64,7 +64,7 @@ var init = function(msgCallback) {
             }
 
             if (message.user) {
-                message.text = '<' + message.user + '> ' + message.text;
+                message.text = '[' + message.user + '] ' + message.text;
             }
 
             logger.verbose('>> relaying to TG:', message.text);
