@@ -76,7 +76,7 @@ exports.getName = function(user, config) {
 };
 
 exports.getIRCName = function(msg, config) {
-    var ircNickMatchRE = /^<(.*)>/;
+    var ircNickMatchRE = /^\[(.*)\]/;
     var results = ircNickMatchRE.exec(msg.text);
     var name;
     if (!results) {
