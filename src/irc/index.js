@@ -136,6 +136,19 @@ var init = function(msgCallback) {
         }
     });
 
+    nodeIrc.on('kick', function(chanName, user, by, reason) {
+        if (config.sendNonMsg) {
+            var channel = ircUtil.lookupChannel(chanName, config.channels);
+            msgCallback({
+                protocol: 'irc',
+                type: 'part',
+                channel: channel,
+                user: null,
+                text: user + ' was kicked by ' + by + ' (' + reason + ')',
+            });
+        }
+    });
+
     nodeIrc.on('quit', function(user, text, channels, message) {
         if (config.sendNonMsg) {
             for (var i = 0; i < channels.length; i++) {
@@ -175,10 +188,11 @@ var init = function(msgCallback) {
             nodeIrc.say(message.channel.ircChan, message.text);
         },
         getNames: function(channel) {
-            return ircUtil.getNames(nodeIrc.chans[channel.ircChan]);
+            return ircUtil.getNames(nodeIrc.chans[channel.ircChan.toLowerCase()]);
         },
         getTopic: function(channel) {
-            return ircUtil.getTopic(nodeIrc.chans[channel.ircChan]);
+            var topic = ircUtil.getTopic(nodeIrc.chans[channel.ircChan.toLowerCase()]);
+            return ircUtil.topicFormat(channel, topic.text, topic.topicBy);
         }
     };
 };
