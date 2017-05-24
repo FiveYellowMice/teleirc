@@ -13,15 +13,21 @@ config.logLevel = 'info';
 // paste the bot API token you got from BotFather here:
 config.tgToken = 'YOUR-BOT-TOKEN';
 
-// send IRC topic changes to Telegram
-config.sendTopic = true;
-
-// send IRC joins, parts and quits to Telegram
-config.sendNonMsg = false;
+// only relay IRC events present in array
+// possible values include:
+// message, notice, action, topic, join, part, kick, quit
+config.relayIRCEvents = ['message', 'notice', 'action', 'topic', 'kick'];
 
 // enable HTTP server which hosts sent media files, links to files are
 // forwarded to IRC
 config.showMedia = false;
+
+// Convert these media files to other types using the "convert" command.
+// To be able to convert from WebP, install imagemagick and the dwebp tool
+// (e.g. sudo apt install imagemagick webp)
+config.mediaConversions = {
+    //'webp': 'png'
+};
 
 // Add some randomness to url when relaying media
 // Use 0 to disable
@@ -159,6 +165,9 @@ config.hlRegexp = new RegExp(regex, 'i');
 // with the default regexp this would hide the bot nickname in messages when
 // highlighted
 config.hlOnlyShowMatch = false;
+
+// put action messages (posted with /me in IRC) between '*'
+config.emphasizeAction = true;
 
 // Messages sent by these nicks on IRC will be ignored.
 config.ircIgnoredUsers = [];

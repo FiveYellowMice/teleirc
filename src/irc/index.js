@@ -2,6 +2,30 @@ var NodeIrc = require('irc');
 var config = require('../config');
 var ircUtil = require('./util');
 var logger = require('winston');
+var _ = require('lodash');
+
+var shouldRelayEvent = function(event) {
+    if (_.isArray(config.relayIRCEvents)) {
+        // Using the new array format
+        if (config.relayIRCEvents.indexOf(event) !== -1) {
+            return true;
+        }
+
+        return false;
+    } else {
+        // Using the old boolean format and warn
+
+        logger.warn('config.sendTopic and config.sendNonMsg were merged into ' +
+            'config.relayIRCEvents. You are either using one of them, or passing a boolean ' +
+            '(true/false) to config.relayIRCEvents. Please migrate to config.relayIRCEvents, ' +
+            'and pass an array of the desired IRC events to relay. See the default config for an ' +
+            'example: ' +
+            'https://github.com/FruitieX/teleirc/blob/develop/src/config.defaults.js '
+        );
+
+        return true;
+    }
+};
 
 var init = function(msgCallback) {
     config.ircOptions.channels = ircUtil.getChannels(config.channels);
@@ -19,6 +43,10 @@ var init = function(msgCallback) {
     });
 
     nodeIrc.on('message', function(user, chanName, text) {
+        if (!shouldRelayEvent('message')) {
+            return;
+        }
+
         var message = ircUtil.parseMsg(chanName, text);
 
         if (message) {
@@ -53,6 +81,10 @@ var init = function(msgCallback) {
     });
 
     nodeIrc.on('notice', function(user, chanName, text) {
+        if (!shouldRelayEvent('notice')) {
+            return;
+        }
+
         var notice = ircUtil.parseMsg(chanName, text);
 
         if (notice) {
@@ -83,20 +115,33 @@ var init = function(msgCallback) {
     });
 
     nodeIrc.on('action', function(user, chanName, text) {
+        if (!shouldRelayEvent('action')) {
+            return;
+        }
+
         var message = ircUtil.parseMsg(chanName, text);
 
         if (message) {
+            var messageText = user + ': ' + message.text;
+            if (config.emphasizeAction) {
+                messageText = '*' + messageText + '*';
+            }
+
             msgCallback({
                 protocol: 'irc',
                 type: 'action',
                 channel: message.channel,
                 user: null,
-                text: '*' + user + ': ' + message.text + '*'
+                text: messageText
             });
         }
     });
 
     nodeIrc.on('topic', function(chanName, topic, user) {
+        if (!shouldRelayEvent('topic')) {
+            return;
+        }
+
         var message = ircUtil.parseTopic(chanName, topic, user);
 
         if (message) {
@@ -111,63 +156,70 @@ var init = function(msgCallback) {
     });
 
     nodeIrc.on('join', function(chanName, user, text) {
-        if (config.sendNonMsg) {
-            var channel = ircUtil.lookupChannel(chanName, config.channels);
-            msgCallback({
-                protocol: 'irc',
-                type: 'join',
-                channel: channel,
-                user: null,
-                text: user + ' has joined'
-            });
+        if (!shouldRelayEvent('join')) {
+            return;
         }
+
+        var channel = ircUtil.lookupChannel(chanName, config.channels);
+        msgCallback({
+            protocol: 'irc',
+            type: 'join',
+            channel: channel,
+            user: null,
+            text: user + ' has joined'
+        });
     });
 
     nodeIrc.on('part', function(chanName, user, text) {
-        if (config.sendNonMsg) {
-            var channel = ircUtil.lookupChannel(chanName, config.channels);
-            msgCallback({
-                protocol: 'irc',
-                type: 'part',
-                channel: channel,
-                user: null,
-                text: user + ' has left'
-            });
+        if (!shouldRelayEvent('part')) {
+            return;
         }
+
+        var channel = ircUtil.lookupChannel(chanName, config.channels);
+        msgCallback({
+            protocol: 'irc',
+            type: 'part',
+            channel: channel,
+            user: null,
+            text: user + ' has left'
+        });
     });
 
     nodeIrc.on('kick', function(chanName, user, by, reason) {
-        if (config.sendNonMsg) {
-            var channel = ircUtil.lookupChannel(chanName, config.channels);
-            msgCallback({
-                protocol: 'irc',
-                type: 'part',
-                channel: channel,
-                user: null,
-                text: user + ' was kicked by ' + by + ' (' + reason + ')',
-            });
+        if (!shouldRelayEvent('kick')) {
+            return;
         }
+
+        var channel = ircUtil.lookupChannel(chanName, config.channels);
+        msgCallback({
+            protocol: 'irc',
+            type: 'part',
+            channel: channel,
+            user: null,
+            text: user + ' was kicked by ' + by + ' (' + reason + ')',
+        });
     });
 
     nodeIrc.on('quit', function(user, text, channels, message) {
-        if (config.sendNonMsg) {
-            for (var i = 0; i < channels.length; i++) {
-                var reason = '';
-                if (text) {
-                    reason = ' (' + text + ')';
-                }
-
-                var channel = ircUtil.lookupChannel(channels[i], config.channels);
-                msgCallback({
-                    protocol: 'irc',
-                    type: 'quit',
-                    channel: channel,
-                    user: null,
-                    text: user + ' has quit' + reason
-                });
-            }
+        if (!shouldRelayEvent('quit')) {
+            return;
         }
 
+        for (var i = 0; i < channels.length; i++) {
+            var reason = '';
+            if (text) {
+                reason = ' (' + text + ')';
+            }
+
+            var channel = ircUtil.lookupChannel(channels[i], config.channels);
+            msgCallback({
+                protocol: 'irc',
+                type: 'quit',
+                channel: channel,
+                user: null,
+                text: user + ' has quit' + reason
+            });
+        }
     });
 
     return {
