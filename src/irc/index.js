@@ -122,9 +122,9 @@ var init = function(msgCallback) {
         var message = ircUtil.parseMsg(chanName, text);
 
         if (message) {
-            var messageText = user + ': ' + message.text;
+            var messageText = user + ' ' + message.text;
             if (config.emphasizeAction) {
-                messageText = '*' + messageText + '*';
+                messageText = '* ' + messageText;
             }
 
             msgCallback({
